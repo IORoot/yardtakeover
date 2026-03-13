@@ -1,0 +1,3305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SUPAXXL Yard Takeover – Challenge Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f9fafb;
+      --bg-elevated: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --row-green: rgba(34, 197, 94, 0.12);
+      --row-orange: rgba(249, 115, 22, 0.12);
+      --row-red: rgba(248, 113, 113, 0.12);
+      --row-blue: rgba(59, 130, 246, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page {
+      width: 100%;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    button {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      background: #eff6ff;
+    }
+
+    button.danger {
+      border-color: #fecaca;
+      color: #b91c1c;
+      background: #fef2f2;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .badge.green {
+      background: #22c55e;
+    }
+
+    .badge.orange {
+      background: #f97316;
+    }
+
+    .badge.red {
+      background: #f87171;
+    }
+
+    .table-container {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .table-scroll {
+      width: 100%;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #f3f4f6;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #ffffff;
+    }
+
+    tbody tr.status-green {
+      background-color: var(--row-green) !important;
+    }
+
+    tbody tr.status-orange {
+      background-color: var(--row-orange) !important;
+    }
+
+    tbody tr.status-red {
+      background-color: var(--row-red) !important;
+    }
+
+    tbody tr.completed {
+      background-color: var(--row-blue) !important;
+    }
+
+    tbody tr.completed .num-cell::before {
+      content: "✓ ";
+      color: #22c55e;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-cell {
+      text-align: center;
+      width: 56px;
+    }
+
+    .num-cell {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .desc-cell {
+      max-width: 260px;
+      white-space: normal;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .image-thumb {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+      background: #f9fafb;
+    }
+
+    .image-thumb img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 3px 10px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .pill.stick-yes {
+      border-color: #fcd34d;
+      color: #facc15;
+    }
+
+    .pill.stick-no {
+      border-color: #4ade80;
+      color: #4ade80;
+    }
+
+    .links-cell a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 6px;
+    }
+
+    .links-cell a:hover {
+      text-decoration: underline;
+    }
+
+    select.status-select {
+      background: #ffffff;
+      color: var(--text);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+
+    .checkbox-cell input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .scroll-controls {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.2rem;
+      }
+
+      .subtitle {
+        margin-top: 4px;
+      }
+
+      .table-container {
+        border-radius: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>SUPAXXL Yard Takeover – Tracker</h1>
+        <div class="subtitle">299 challenges • progress, notes & colour-coded status – saved on this device.</div>
+      </div>
+      <div class="controls">
+        <button id="clear-completed" class="danger">Clear completed flags</button>
+        <button id="clear-status" class="danger">Clear row colours</button>
+        <button id="clear-all" class="danger">Reset all state</button>
+        <div class="legend">
+          <span><span class="badge green"></span> Green</span>
+          <span><span class="badge orange"></span> Orange</span>
+          <span><span class="badge red"></span> Red</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="table-container">
+      <div class="table-scroll">
+        <table id="challenges-table">
+          <thead>
+            <tr>
+              <th>Done</th>
+              <th>#</th>
+              <th>Image</th>
+              <th>Description</th>
+              <th>Stick?</th>
+              <th>Links</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-controls">
+    <button id="scroll-top-btn">▲ Top</button>
+    <button id="scroll-bottom-btn">▼ Bottom</button>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'yard_takeover_challenges_state_v1';
+
+    // Inline data so this file is fully standalone
+    const CHALLENGES_DATA =
+    [
+  {
+    "number": "1",
+    "title": "Challenge 1",
+    "image": "challenge_overlays/challenge_1.png",
+    "description": "Tac off wall A Lache off rail B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-1"
+  },
+  {
+    "number": "2",
+    "title": "Challenge 2",
+    "image": "challenge_overlays/challenge_2.png",
+    "description": "Double yard over wall A and B Either direction counts",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-2"
+  },
+  {
+    "number": "3",
+    "title": "Challenge 3",
+    "image": "challenge_overlays/challenge_3.png",
+    "description": "Cat pass wall A pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-3"
+  },
+  {
+    "number": "4",
+    "title": "Challenge 4",
+    "image": "challenge_overlays/challenge_4.png",
+    "description": "Cat pass wall A Two steps on wall B 270 pre block C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-4"
+  },
+  {
+    "number": "5",
+    "title": "Challenge 5",
+    "image": "challenge_overlays/challenge_5.png",
+    "description": "TicTac off Wall A Hurdle wall B Swing off pole C Must swing before touching the floor after hurdle",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-5"
+  },
+  {
+    "number": "6",
+    "title": "Challenge 6",
+    "image": "challenge_overlays/challenge_6.png",
+    "description": "Off wall A Swing round to the left of Pole B Pre rail with griptape C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-6"
+  },
+  {
+    "number": "7",
+    "title": "Challenge 7",
+    "image": "challenge_overlays/challenge_7.png",
+    "description": "Standing on Rail A Pre Brother B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-7"
+  },
+  {
+    "number": "8",
+    "title": "Challenge 8",
+    "image": "challenge_overlays/challenge_8.png",
+    "description": "Lache from rail A Pre white wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-8"
+  },
+  {
+    "number": "9",
+    "title": "Challenge 9",
+    "image": "challenge_overlays/challenge_9.png",
+    "description": "Step in Plyo off platform A 180 hurdle to platform B 180 plyo to pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-9"
+  },
+  {
+    "number": "10",
+    "title": "Challenge 10",
+    "image": "challenge_overlays/challenge_10.png",
+    "description": "Running or standing off wall A Pre to slope B Dive role out",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-10"
+  },
+  {
+    "number": "11",
+    "title": "Challenge 11",
+    "image": "challenge_overlays/challenge_11.png",
+    "description": "Buy something from Big Gino. Anything. Upload a photo or video of you posing with your purchase with Gino’s place behind you. Direction...",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/0tjddo7wiupx",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/0tjddo7wiupx"
+  },
+  {
+    "number": "12",
+    "title": "Challenge 12",
+    "image": "challenge_overlays/challenge_12.png",
+    "description": "Use the famous trio to create a flow line. Must be creative, strides count as long as they're not to start or end the line. Can be used in a...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-14"
+  },
+  {
+    "number": "13",
+    "title": "Challenge 13",
+    "image": "challenge_overlays/challenge_13.png",
+    "description": "Stand on the end of the gnar wall horn for 5 seconds. 1 foot is fine",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-15"
+  },
+  {
+    "number": "14",
+    "title": "Challenge 14",
+    "image": "challenge_overlays/challenge_14.png",
+    "description": "Standing pre - From Block A To island B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-16"
+  },
+  {
+    "number": "15",
+    "title": "Challenge 15",
+    "image": "challenge_overlays/challenge_15.png",
+    "description": "Hurdle sister A Pre sister B. No step up allowed.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-17"
+  },
+  {
+    "number": "16",
+    "title": "Challenge 16",
+    "image": "challenge_overlays/challenge_16.png",
+    "description": "Running pre off Planter A Pre brother B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-18"
+  },
+  {
+    "number": "17",
+    "title": "Challenge 17",
+    "image": "challenge_overlays/challenge_17.png",
+    "description": "Stride off white wall A Stride middle earth B Pre first rail C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-19"
+  },
+  {
+    "number": "18",
+    "title": "Challenge 18",
+    "image": "challenge_overlays/challenge_18.png",
+    "description": "Stride off middle earth A Stride off first rail B Pre Nigel's demise C Step up allowed for run up.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-20"
+  },
+  {
+    "number": "19",
+    "title": "Challenge 19",
+    "image": "challenge_overlays/challenge_19.png",
+    "description": "Stride off middle earth A Hurdle tower Pre Nigel's demise B Step ups allowed",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-21"
+  },
+  {
+    "number": "20",
+    "title": "Challenge 20",
+    "image": "challenge_overlays/challenge_20.png",
+    "description": "Running pre off yardito A To rail B Step up allowed",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-22"
+  },
+  {
+    "number": "21",
+    "title": "Challenge 21",
+    "image": "challenge_overlays/challenge_21.png",
+    "description": "Running from Yardito A Pre 1st wall B step up allowed",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-23"
+  },
+  {
+    "number": "22",
+    "title": "Challenge 22",
+    "image": "challenge_overlays/challenge_22.png",
+    "description": "Create a flow line with mohawk A And Gnarwall B No extra unnecessary steps (We're strict on that, go watch storror London race if you w...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-24"
+  },
+  {
+    "number": "23",
+    "title": "Challenge 23",
+    "image": "challenge_overlays/challenge_23.png",
+    "description": "Standing on wall A Plyo off slope B Plyo off ledge C Pre back to wall A",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-25"
+  },
+  {
+    "number": "24",
+    "title": "Challenge 24",
+    "image": "challenge_overlays/challenge_24.png",
+    "description": "Running pre off wall A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-26"
+  },
+  {
+    "number": "25",
+    "title": "Challenge 25",
+    "image": "challenge_overlays/challenge_25.png",
+    "description": "360 pre from top step A To rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-27"
+  },
+  {
+    "number": "26",
+    "title": "Challenge 26",
+    "image": "challenge_overlays/challenge_26.png",
+    "description": "Running Off mohawk rail A Arm jump wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-28"
+  },
+  {
+    "number": "27",
+    "title": "Challenge 27",
+    "image": "challenge_overlays/challenge_27.png",
+    "description": "Double the brothers Wall A to B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-29"
+  },
+  {
+    "number": "28",
+    "title": "Challenge 28",
+    "image": "challenge_overlays/challenge_28.png",
+    "description": "Dive brothers Over Wall A Cat pass wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-30"
+  },
+  {
+    "number": "29",
+    "title": "Challenge 29",
+    "image": "challenge_overlays/challenge_29.png",
+    "description": "Double the sisters Walls A and B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-31"
+  },
+  {
+    "number": "30",
+    "title": "Challenge 30",
+    "image": "challenge_overlays/challenge_30.png",
+    "description": "Dive the sisters Over wall A Cat pass wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-32"
+  },
+  {
+    "number": "31",
+    "title": "Challenge 31",
+    "image": "challenge_overlays/challenge_31.png",
+    "description": "360 pre from higher rail A Pre lower rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-33"
+  },
+  {
+    "number": "32",
+    "title": "Challenge 32",
+    "image": "challenge_overlays/challenge_32.png",
+    "description": "Pre from Rail A Hurdle middle rail Pre rail B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-34"
+  },
+  {
+    "number": "33",
+    "title": "Challenge 33",
+    "image": "challenge_overlays/challenge_33.png",
+    "description": "Standing from Tower A Plyo rail B Pre rail C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-35"
+  },
+  {
+    "number": "34",
+    "title": "Challenge 34",
+    "image": "challenge_overlays/challenge_34.png",
+    "description": "Running stride off rail A Plyo rail B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-36"
+  },
+  {
+    "number": "35",
+    "title": "Challenge 35",
+    "image": "challenge_overlays/challenge_35.png",
+    "description": "Standing on the block of Yardito A Stride white wall B Pre block/wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-37"
+  },
+  {
+    "number": "36",
+    "title": "Challenge 36",
+    "image": "challenge_overlays/challenge_36.png",
+    "description": "Standing on white wall A Pre-up to block B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-38"
+  },
+  {
+    "number": "37",
+    "title": "Challenge 37",
+    "image": "challenge_overlays/challenge_37.png",
+    "description": "Cat pass wall A Pre white curb B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-40"
+  },
+  {
+    "number": "38",
+    "title": "Challenge 38",
+    "image": "challenge_overlays/challenge_38.png",
+    "description": "Standing on block A 360 pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-41"
+  },
+  {
+    "number": "39",
+    "title": "Challenge 39",
+    "image": "challenge_overlays/challenge_39.png",
+    "description": "Running pre from the block of Yardito A Pre block B. Cannot take off from the wall section.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-42"
+  },
+  {
+    "number": "40",
+    "title": "Challenge 40",
+    "image": "challenge_overlays/challenge_40.png",
+    "description": "Standing on Tower A Dive roll island B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-43"
+  },
+  {
+    "number": "41",
+    "title": "Challenge 41",
+    "image": "challenge_overlays/challenge_41.png",
+    "description": "Standing on wall A Pre rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-44"
+  },
+  {
+    "number": "42",
+    "title": "Challenge 42",
+    "image": "challenge_overlays/challenge_42.png",
+    "description": "1 foot on wall A Pre top B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-45"
+  },
+  {
+    "number": "43",
+    "title": "Challenge 43",
+    "image": "challenge_overlays/challenge_43.png",
+    "description": "Dive over wall A Swing around pole B Splat/180 wall A Stick curb C",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/challenge-46",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-46"
+  },
+  {
+    "number": "44",
+    "title": "Challenge 44",
+    "image": "challenge_overlays/challenge_44.png",
+    "description": "Off middle earth A 180 Dive over rail B Underbar rail C (Any takeoff from top wall A. Step up allowed in run up.)",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-48"
+  },
+  {
+    "number": "45",
+    "title": "Challenge 45",
+    "image": "challenge_overlays/challenge_45.png",
+    "description": "Tic tac side of Gnar-Wall A To plyo from ramp B over rail to land on slope and dive roll floor C No touching the floor between tic tac...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-49"
+  },
+  {
+    "number": "46",
+    "title": "Challenge 46",
+    "image": "challenge_overlays/challenge_46.png",
+    "description": "360 Dive over wall A Cat pass wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-50"
+  },
+  {
+    "number": "47",
+    "title": "Challenge 47",
+    "image": "challenge_overlays/challenge_47.png",
+    "description": "Off steps A Splat wall B Hands can’t touch floor after landing Back roll after landing not accepted",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-51"
+  },
+  {
+    "number": "48",
+    "title": "Challenge 48",
+    "image": "challenge_overlays/challenge_48.png",
+    "description": "Off white wall A Dive roll block B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-52"
+  },
+  {
+    "number": "49",
+    "title": "Challenge 49",
+    "image": "challenge_overlays/challenge_49.png",
+    "description": "Roll pre from Yardito A Stick white wall B Hands must not touch the sides of Yardito",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-53"
+  },
+  {
+    "number": "50",
+    "title": "Challenge 50",
+    "image": "challenge_overlays/challenge_50.png",
+    "description": "Off top of wall A Tictak off edge of tower B Pre island C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-54"
+  },
+  {
+    "number": "51",
+    "title": "Challenge 51",
+    "image": "challenge_overlays/challenge_51.png",
+    "description": "From standing on rail A 360 to underbar rail B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-55"
+  },
+  {
+    "number": "52",
+    "title": "Challenge 52",
+    "image": "challenge_overlays/challenge_52.png",
+    "description": "Tic tac from wall A to rail B Plyo to underbar bar C",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-56"
+  },
+  {
+    "number": "53",
+    "title": "Challenge 53",
+    "image": "challenge_overlays/challenge_53.png",
+    "description": "Cat pass rail A Stick Rail B No side kongs/catpasses",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-57"
+  },
+  {
+    "number": "54",
+    "title": "Challenge 54",
+    "image": "challenge_overlays/challenge_54.png",
+    "description": "Box jump hurdle over rail A Land between parallel rails Straight to dive roll under rail B and over C",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/challenge-58",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-58"
+  },
+  {
+    "number": "55",
+    "title": "Challenge 55",
+    "image": "challenge_overlays/challenge_55.png",
+    "description": "Standing from from rail A Pre coping of mole B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-59"
+  },
+  {
+    "number": "56",
+    "title": "Challenge 56",
+    "image": "challenge_overlays/challenge_56.png",
+    "description": "Cat pass ledge A Pre ledge B Proper cat pass, no tap and hurdles",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/challenge-60"
+  },
+  {
+    "number": "57",
+    "title": "Challenge 57",
+    "image": "challenge_overlays/challenge_57.png",
+    "description": "Cat pass Rail A Arm jump Wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/tre0cvdg23h1"
+  },
+  {
+    "number": "58",
+    "title": "Challenge 58",
+    "image": "challenge_overlays/challenge_58.png",
+    "description": "Cat pass pre the brothers. Vault wall A, pre wall B. No stick required, sketchy slip off landings not accepted.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/0guxslgoj3iq"
+  },
+  {
+    "number": "59",
+    "title": "Challenge 59",
+    "image": "challenge_overlays/challenge_59.png",
+    "description": "Plyo challenge from the right wall (standing) to top wall on the left.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/nfqr7bgvb0o7"
+  },
+  {
+    "number": "60",
+    "title": "Challenge 60",
+    "image": "challenge_overlays/challenge_60.png",
+    "description": "Stand from wall A Pole cat B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hp8bgl6i84vp"
+  },
+  {
+    "number": "61",
+    "title": "Challenge 61",
+    "image": "challenge_overlays/challenge_61.png",
+    "description": "Off rail A Lache B Arm jump C",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/syvjyriqlxrr"
+  },
+  {
+    "number": "62",
+    "title": "Challenge 62",
+    "image": "challenge_overlays/challenge_62.png",
+    "description": "Punch/2 foot dive from Brother A to brother B. Step ups allowed.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/zw8csokwhhva"
+  },
+  {
+    "number": "63",
+    "title": "Challenge 63",
+    "image": "challenge_overlays/challenge_63.png",
+    "description": "360 pre from Wall A Stick step B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rifigeayy3dg"
+  },
+  {
+    "number": "64",
+    "title": "Challenge 64",
+    "image": "challenge_overlays/challenge_64.png",
+    "description": "Off platform A Dive roll wall B Pre rail C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cq1e0tyypk2u"
+  },
+  {
+    "number": "65",
+    "title": "Challenge 65",
+    "image": "challenge_overlays/challenge_65.png",
+    "description": "Start at A Pre down to B (parallel wall) Plyo out to C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jk6nlulf4spd"
+  },
+  {
+    "number": "66",
+    "title": "Challenge 66",
+    "image": "challenge_overlays/challenge_66.png",
+    "description": "Cat pass A 2 strides on B (wall and block) Pre C (middle earth)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qa1qknv0hgd7"
+  },
+  {
+    "number": "67",
+    "title": "Challenge 67",
+    "image": "challenge_overlays/challenge_67.png",
+    "description": "Running pre from middle step A to B, plyo out to C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/tc4ekmdz2az6"
+  },
+  {
+    "number": "68",
+    "title": "Challenge 68",
+    "image": "challenge_overlays/challenge_68.png",
+    "description": "Lache off A Pre rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/6rj5orce6utf"
+  },
+  {
+    "number": "69",
+    "title": "Challenge 69",
+    "image": "challenge_overlays/challenge_69.png",
+    "description": "Cat pass up on A 3 strides on B (wall and block) Pre C (Middle earth)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/lgwepicepaz4"
+  },
+  {
+    "number": "70",
+    "title": "Challenge 70",
+    "image": "challenge_overlays/challenge_70.png",
+    "description": "Cat pass pre from A to B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/banqb7xumbi0"
+  },
+  {
+    "number": "71",
+    "title": "Challenge 71",
+    "image": "challenge_overlays/challenge_71.png",
+    "description": "Running off wall A Dash wall B Step ups allowed.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/dzqf1k5qcc8k"
+  },
+  {
+    "number": "72",
+    "title": "Challenge 72",
+    "image": "challenge_overlays/challenge_72.png",
+    "description": "360 dive cat pass over rail A To rail B Feet Must land the other side of rail B, not in-between them Side exit allowed",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/mp3cxpyl9cfh"
+  },
+  {
+    "number": "73",
+    "title": "Challenge 73",
+    "image": "challenge_overlays/challenge_73.png",
+    "description": "Standing pre from top platform A Pre rail B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/bbvnb1sme1is"
+  },
+  {
+    "number": "74",
+    "title": "Challenge 74",
+    "image": "challenge_overlays/challenge_74.png",
+    "description": "Stand on A (steps) Plyo B (rail) Pre C (curb on mole)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/9qr8zj7kwkr0"
+  },
+  {
+    "number": "75",
+    "title": "Challenge 75",
+    "image": "challenge_overlays/challenge_75.png",
+    "description": "Pre from wall A to far rail B. Running, standing or plyo accepted.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cnr6nasyf9qy"
+  },
+  {
+    "number": "76",
+    "title": "Challenge 76",
+    "image": "challenge_overlays/challenge_76.png",
+    "description": "Cat pass A Arm jump B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/dgkard0c5qm3"
+  },
+  {
+    "number": "77",
+    "title": "Challenge 77",
+    "image": "challenge_overlays/challenge_77.png",
+    "description": "Cat pass A Pre B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/yc3fp5nybmbx"
+  },
+  {
+    "number": "78",
+    "title": "Challenge 78",
+    "image": "challenge_overlays/challenge_78.png",
+    "description": "Tic tac off wall A Bonnet slide floor B Cat pass wall C Pre rail D",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/h9vhjbcg1gql"
+  },
+  {
+    "number": "79",
+    "title": "Challenge 79",
+    "image": "challenge_overlays/challenge_79.png",
+    "description": "Standing pre from rail A down to rail B, plyo cat pass over wall C Pre top platform D.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/imr2rnnobm4a"
+  },
+  {
+    "number": "80",
+    "title": "Challenge 80",
+    "image": "challenge_overlays/challenge_80.png",
+    "description": "Pre from wall A to high rail B. Running or plyo accepted.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/8eivdpxahrqw"
+  },
+  {
+    "number": "81",
+    "title": "Challenge 81",
+    "image": "challenge_overlays/challenge_81.png",
+    "description": "Running pre takeoff A Pre B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/drj1cobp7nbj"
+  },
+  {
+    "number": "82",
+    "title": "Challenge 82",
+    "image": "challenge_overlays/challenge_82.png",
+    "description": "360 from Tower A Pre rail B Dodgy stick accepted",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/z5r8sckiq6sz"
+  },
+  {
+    "number": "83",
+    "title": "Challenge 83",
+    "image": "challenge_overlays/challenge_83.png",
+    "description": "Standing pre down from A to B, plyo to cat pass over C and land on D.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/uww6uacutkvm"
+  },
+  {
+    "number": "84",
+    "title": "Challenge 84",
+    "image": "challenge_overlays/challenge_84.png",
+    "description": "Flip pre from wall A to wall B. No stick required. Step up allowed for run up.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/t9ne14cm1e5h"
+  },
+  {
+    "number": "85",
+    "title": "Challenge 85",
+    "image": "challenge_overlays/challenge_85.png",
+    "description": "Take off wall A (brother/higher wall) Stride wall B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/oikjdwsf0vbb"
+  },
+  {
+    "number": "86",
+    "title": "Challenge 86",
+    "image": "challenge_overlays/challenge_86.png",
+    "description": "Gainer pre from wall A to wall B Heels over the edge not required",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/celbdlzyp93j"
+  },
+  {
+    "number": "87",
+    "title": "Challenge 87",
+    "image": "challenge_overlays/challenge_87.png",
+    "description": "Double cat pass using A and B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/pchxih1tlzsd"
+  },
+  {
+    "number": "88",
+    "title": "Challenge 88",
+    "image": "challenge_overlays/challenge_88.png",
+    "description": "Off Sister A Swing round pole B Arm jump wall C",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ur8uwdwuwqel"
+  },
+  {
+    "number": "89",
+    "title": "Challenge 89",
+    "image": "challenge_overlays/challenge_89.png",
+    "description": "Standing Pre A to B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jdwn5ofiushs"
+  },
+  {
+    "number": "90",
+    "title": "Challenge 90",
+    "image": "challenge_overlays/challenge_90.png",
+    "description": "Standing pre from A Plyo rail B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rbhgpon8efwq"
+  },
+  {
+    "number": "91",
+    "title": "Challenge 91",
+    "image": "challenge_overlays/challenge_91.png",
+    "description": "Dive cat pass over A Vault B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/nzndeur1koge"
+  },
+  {
+    "number": "92",
+    "title": "Challenge 92",
+    "image": "challenge_overlays/challenge_92.png",
+    "description": "Catpass to dive roll from wall A to block B. Note it is not catpass pre to roll off, it is the move similar in form to a double catpass wit...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/9ighflxywzdi"
+  },
+  {
+    "number": "93",
+    "title": "Challenge 93",
+    "image": "challenge_overlays/challenge_93.png",
+    "description": "Running pre from A Pre B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/unfo6khubjrj"
+  },
+  {
+    "number": "94",
+    "title": "Challenge 94",
+    "image": "challenge_overlays/challenge_94.png",
+    "description": "Mildred (sitting dash) from wall A to B.",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/fbs4nabchzov",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fbs4nabchzov"
+  },
+  {
+    "number": "95",
+    "title": "Challenge 95",
+    "image": "challenge_overlays/challenge_95.png",
+    "description": "Cat pass up onto A Plyo to pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ttbjh70y26mc"
+  },
+  {
+    "number": "96",
+    "title": "Challenge 96",
+    "image": "challenge_overlays/challenge_96.png",
+    "description": "Reverse mole A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/em6m5tiuia5b"
+  },
+  {
+    "number": "97",
+    "title": "Challenge 97",
+    "image": "challenge_overlays/challenge_97.png",
+    "description": "Catpass wall A, two steps on block B, pre island C. Must land in stride on block B. No stick required.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/zq692wvigjzc"
+  },
+  {
+    "number": "98",
+    "title": "Challenge 98",
+    "image": "challenge_overlays/challenge_98.png",
+    "description": "Cat pass over A to B, plyo up to C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/pwjor5m0lhhl"
+  },
+  {
+    "number": "99",
+    "title": "Challenge 99",
+    "image": "challenge_overlays/challenge_99.png",
+    "description": "Off wall A Giant rail B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hjoidlycmlww"
+  },
+  {
+    "number": "100",
+    "title": "Challenge 100",
+    "image": "challenge_overlays/challenge_100.png",
+    "description": "Cat pass A to B, plyo up to C, dive cat pass D.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ky5g34ckzxv1"
+  },
+  {
+    "number": "101",
+    "title": "Challenge 101",
+    "image": "challenge_overlays/challenge_101.png",
+    "description": "Vault wall A 3 steps in the middle Vault wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/pk1oojs4vgf4"
+  },
+  {
+    "number": "102",
+    "title": "Challenge 102",
+    "image": "challenge_overlays/challenge_102.png",
+    "description": "Strides starting from A to B to C to D Skateboard pre rail E Stride left side of pole on wall D",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/k1tclljo6o1t"
+  },
+  {
+    "number": "103",
+    "title": "Challenge 103",
+    "image": "challenge_overlays/challenge_103.png",
+    "description": "Dive roll from block A to island B.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/7wlpkvg3cqjy"
+  },
+  {
+    "number": "104",
+    "title": "Challenge 104",
+    "image": "challenge_overlays/challenge_104.png",
+    "description": "Running cat pass from A stride B stride C stride D pre E",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/na8riomevkxd"
+  },
+  {
+    "number": "105",
+    "title": "Challenge 105",
+    "image": "challenge_overlays/challenge_105.png",
+    "description": "From sister A Pre back of planter B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/3dnidtr2e8t9"
+  },
+  {
+    "number": "106",
+    "title": "Challenge 106",
+    "image": "challenge_overlays/challenge_106.png",
+    "description": "Flip pre from block A to island B, front 540 or double A-twist out. Backwards rolling out of landing allowed, falling back after landing n...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/imyvdj1oigax"
+  },
+  {
+    "number": "107",
+    "title": "Challenge 107",
+    "image": "challenge_overlays/challenge_107.png",
+    "description": "TicTac wall A Pre platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rx1oxlz25b1b"
+  },
+  {
+    "number": "108",
+    "title": "Challenge 108",
+    "image": "challenge_overlays/challenge_108.png",
+    "description": "Tic tac wall A Land on wall B and swing around pole and land on B again Dive cat pass C (Second clip in video)",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/00zkgzdrntfa",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/00zkgzdrntfa"
+  },
+  {
+    "number": "109",
+    "title": "Challenge 109",
+    "image": "challenge_overlays/challenge_109.png",
+    "description": "Take off wall A, stride wall B, stride or plyo block C, pre island D. No stick required. Step up allowed for run up.",
+    "stickRequired": "No",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/jjbbftmtmtgt",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jjbbftmtmtgt"
+  },
+  {
+    "number": "110",
+    "title": "Challenge 110",
+    "image": "challenge_overlays/challenge_110.png",
+    "description": "Running pre from A to B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/k8qruged4n2i"
+  },
+  {
+    "number": "111",
+    "title": "Challenge 111",
+    "image": "challenge_overlays/challenge_111.png",
+    "description": "Standing off wall A Pre Rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/neldudjbk0va"
+  },
+  {
+    "number": "112",
+    "title": "Challenge 112",
+    "image": "challenge_overlays/challenge_112.png",
+    "description": "Catpass island A to armjump tower B. Climb up required.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/1wcpkoexp1lj"
+  },
+  {
+    "number": "113",
+    "title": "Challenge 113",
+    "image": "challenge_overlays/challenge_113.png",
+    "description": "Tag your name on top of yardito (no spray paint)",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/6mtjq8wfhgsy"
+  },
+  {
+    "number": "114",
+    "title": "Challenge 114",
+    "image": "challenge_overlays/challenge_114.png",
+    "description": "Cat pass wall A Plyo lower step B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/tks6cxzcs14k"
+  },
+  {
+    "number": "115",
+    "title": "Challenge 115",
+    "image": "challenge_overlays/challenge_115.png",
+    "description": "Cat pass Nigel’s demise A Pre B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hrgazawgln7d"
+  },
+  {
+    "number": "116",
+    "title": "Challenge 116",
+    "image": "challenge_overlays/challenge_116.png",
+    "description": "Take off white wall A, stride wall B, stride wall C, armjump wall D. Climb up over the rail required. Doesn’t need to be dyno, just get u...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qddvyorg2iak"
+  },
+  {
+    "number": "117",
+    "title": "Challenge 117",
+    "image": "challenge_overlays/challenge_117.png",
+    "description": "Standing pre down to B, plyo up to C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/uqwxlqbarepc"
+  },
+  {
+    "number": "118",
+    "title": "Challenge 118",
+    "image": "challenge_overlays/challenge_118.png",
+    "description": "Start at the wall A, cat pass up B to plyo up to C, plyo down to D.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/gabjkswhigor"
+  },
+  {
+    "number": "119",
+    "title": "Challenge 119",
+    "image": "challenge_overlays/challenge_119.png",
+    "description": "Standing pre from bottom rail A Pre middle rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/lhjpmddm4sqv"
+  },
+  {
+    "number": "120",
+    "title": "Challenge 120",
+    "image": "challenge_overlays/challenge_120.png",
+    "description": "Lache from Rail A Pre step B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fvojrmrcwnug"
+  },
+  {
+    "number": "121",
+    "title": "Challenge 121",
+    "image": "challenge_overlays/challenge_121.png",
+    "description": "360 pre from tower A to block B. No stick required.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/gdbeajvnmu2v"
+  },
+  {
+    "number": "122",
+    "title": "Challenge 122",
+    "image": "challenge_overlays/challenge_122.png",
+    "description": "Create a flow line from the top A to floor B Using all 3 walls on the cascade -- No catpass pre's Different vault every time",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vyyqg97ntyay"
+  },
+  {
+    "number": "123",
+    "title": "Challenge 123",
+    "image": "challenge_overlays/challenge_123.png",
+    "description": "Flip pre from wall of yardito A to wall B. No stick required. Sketchy slip off landing not accepted.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fkgmcwsuxgr0"
+  },
+  {
+    "number": "124",
+    "title": "Challenge 124",
+    "image": "challenge_overlays/challenge_124.png",
+    "description": "Standing pre down from wall A Pre lower platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/azowkpdfcrkj"
+  },
+  {
+    "number": "125",
+    "title": "Challenge 125",
+    "image": "challenge_overlays/challenge_125.png",
+    "description": "Standing pre from A to B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hrblo5hwvzfx"
+  },
+  {
+    "number": "126",
+    "title": "Challenge 126",
+    "image": "challenge_overlays/challenge_126.png",
+    "description": "Standing on wall A Arm jump wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hd0khwkxq266"
+  },
+  {
+    "number": "127",
+    "title": "Challenge 127",
+    "image": "challenge_overlays/challenge_127.png",
+    "description": "Running pre from wall A to wall B. No step up allowed.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/y5hlp6noyn35"
+  },
+  {
+    "number": "128",
+    "title": "Challenge 128",
+    "image": "challenge_overlays/challenge_128.png",
+    "description": "Cat pass rail A Lache bar B, swing 180 Lache pre to C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qsyiqe9g8j9a"
+  },
+  {
+    "number": "129",
+    "title": "Challenge 129",
+    "image": "challenge_overlays/challenge_129.png",
+    "description": "Running pre from A Pre Nigel’s demise (right hand wall on this picture) B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vlcbe06ezptt"
+  },
+  {
+    "number": "130",
+    "title": "Challenge 130",
+    "image": "challenge_overlays/challenge_130.png",
+    "description": "Standing on wall A One or two strides on Wall B Stick rail C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xg2litfgqajs"
+  },
+  {
+    "number": "131",
+    "title": "Challenge 131",
+    "image": "challenge_overlays/challenge_131.png",
+    "description": "Running pre from white wall A to wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/o4kshb7jjs1t"
+  },
+  {
+    "number": "132",
+    "title": "Challenge 132",
+    "image": "challenge_overlays/challenge_132.png",
+    "description": "Inward side off rail A to wall B. One or two step accepted.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hpdk5zoe7yp3"
+  },
+  {
+    "number": "133",
+    "title": "Challenge 133",
+    "image": "challenge_overlays/challenge_133.png",
+    "description": "Box jump (gallop or step in allowed) up to A, plyo to B, plyo to C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ye6zoxygetbs"
+  },
+  {
+    "number": "134",
+    "title": "Challenge 134",
+    "image": "challenge_overlays/challenge_134.png",
+    "description": "Running pre take off from block A Land on island B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/euifxc5jwzvf"
+  },
+  {
+    "number": "135",
+    "title": "Challenge 135",
+    "image": "challenge_overlays/challenge_135.png",
+    "description": "Catpass into stride island A, stride onto wall B, take another step on wall B to stride rail C, stride rail D, pre wall E. Must all be stri...",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/7fnsuvqclals",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/7fnsuvqclals"
+  },
+  {
+    "number": "136",
+    "title": "Challenge 136",
+    "image": "challenge_overlays/challenge_136.png",
+    "description": "Running from rail A Pre middle block B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/szhqzmsjwpvj"
+  },
+  {
+    "number": "137",
+    "title": "Challenge 137",
+    "image": "challenge_overlays/challenge_137.png",
+    "description": "Off wall A Dive roll top of Brother B Standing or running allowed",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/crumur97fojj"
+  },
+  {
+    "number": "138",
+    "title": "Challenge 138",
+    "image": "challenge_overlays/challenge_138.png",
+    "description": "Dive roll from before rail A Onto top step B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/d5gdvfmcghnu"
+  },
+  {
+    "number": "139",
+    "title": "Challenge 139",
+    "image": "challenge_overlays/challenge_139.png",
+    "description": "Step up sister wall A Stride or plyo sister wall B Pre wall C (where Oli is standing)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/lhfrdv0uqoir"
+  },
+  {
+    "number": "140",
+    "title": "Challenge 140",
+    "image": "challenge_overlays/challenge_140.png",
+    "description": "Standing pre take off wall A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xrqplagycdlm"
+  },
+  {
+    "number": "141",
+    "title": "Challenge 141",
+    "image": "challenge_overlays/challenge_141.png",
+    "description": "Cat pass middle earth wall A Pre block B (either side of corner)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wzntbjv47mii"
+  },
+  {
+    "number": "142",
+    "title": "Challenge 142",
+    "image": "challenge_overlays/challenge_142.png",
+    "description": "Dash wall A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ip6ev07e8tyl"
+  },
+  {
+    "number": "143",
+    "title": "Challenge 143",
+    "image": "challenge_overlays/challenge_143.png",
+    "description": "Take off step A Armjump wall B Step up allowed for run up. Climb up and onto rail required. Doesn’t need to be dyno, but need to get up...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/imvzjl4qpmxt"
+  },
+  {
+    "number": "144",
+    "title": "Challenge 144",
+    "image": "challenge_overlays/challenge_144.png",
+    "description": "Flip pre from block A to island B.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/x26sg5gpy7dw"
+  },
+  {
+    "number": "145",
+    "title": "Challenge 145",
+    "image": "challenge_overlays/challenge_145.png",
+    "description": "Pre from back rail A to middle step B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/q3vqrptcovad"
+  },
+  {
+    "number": "146",
+    "title": "Challenge 146",
+    "image": "challenge_overlays/challenge_146.png",
+    "description": "Running pre from tower A to top step B. Any setup for the run-up accepted. No stick required. Sketchy slip landing not accepted.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hniyrzrgklmj"
+  },
+  {
+    "number": "147",
+    "title": "Challenge 147",
+    "image": "challenge_overlays/challenge_147.png",
+    "description": "Kong wall A Swing 180 bar B Lache pre ledge C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/2pliy2wk6rph"
+  },
+  {
+    "number": "148",
+    "title": "Challenge 148",
+    "image": "challenge_overlays/challenge_148.png",
+    "description": "From platform A Tictac surface of wall B Speedstep wall C",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/m5ubgy9imwx5"
+  },
+  {
+    "number": "149",
+    "title": "Challenge 149",
+    "image": "challenge_overlays/challenge_149.png",
+    "description": "Reverse vault wall A pre platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ha607sudevsq"
+  },
+  {
+    "number": "150",
+    "title": "Challenge 150",
+    "image": "challenge_overlays/challenge_150.png",
+    "description": "Tic tac wall A Stick ledge B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vyoifiuzpdgt"
+  },
+  {
+    "number": "151",
+    "title": "Challenge 151",
+    "image": "challenge_overlays/challenge_151.png",
+    "description": "Starting platform A Stride wall B Pre rail C Standing or running start accepted",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/txfgmydvrbcy"
+  },
+  {
+    "number": "152",
+    "title": "Challenge 152",
+    "image": "challenge_overlays/challenge_152.png",
+    "description": "Lache from A Pre rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/llqvuwop220n"
+  },
+  {
+    "number": "153",
+    "title": "Challenge 153",
+    "image": "challenge_overlays/challenge_153.png",
+    "description": "Dive kong length of wall A Plyo or gallop from platform B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/omhxyadhzhkg"
+  },
+  {
+    "number": "154",
+    "title": "Challenge 154",
+    "image": "challenge_overlays/challenge_154.png",
+    "description": "Dive catpass over wall A to B. Take off from the floor.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/4hpaxt9bf7wf"
+  },
+  {
+    "number": "155",
+    "title": "Challenge 155",
+    "image": "challenge_overlays/challenge_155.png",
+    "description": "One hand on rail A, one hand rail B, lache from one arm to pre at C. Allowed to swing back while holding A and B however swing off A only al...",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/kuczkteanivr"
+  },
+  {
+    "number": "156",
+    "title": "Challenge 156",
+    "image": "challenge_overlays/challenge_156.png",
+    "description": "Reverse pre wall A to B. Wobbly stick accepted, slip landing not accepted.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/2ox8kxsg0puw"
+  },
+  {
+    "number": "157",
+    "title": "Challenge 157",
+    "image": "challenge_overlays/challenge_157.png",
+    "description": "Dyno from ledge A Up to B Single arm dyno allowed No corner grabs allowed",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/w7wjomuffkfw"
+  },
+  {
+    "number": "158",
+    "title": "Challenge 158",
+    "image": "challenge_overlays/challenge_158.png",
+    "description": "Standing pre from Sister A Stick lower platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/4ehp0luwavb9"
+  },
+  {
+    "number": "159",
+    "title": "Challenge 159",
+    "image": "challenge_overlays/challenge_159.png",
+    "description": "Kong-front wall A clear wall B.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/v4afxnbj0rzr"
+  },
+  {
+    "number": "160",
+    "title": "Challenge 160",
+    "image": "challenge_overlays/challenge_160.png",
+    "description": "From white wall A Dive roll Yardito B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/8ygafcbkzi2e"
+  },
+  {
+    "number": "161",
+    "title": "Challenge 161",
+    "image": "challenge_overlays/challenge_161.png",
+    "description": "Hurdle wall A, pre wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ibi8gmixmypd"
+  },
+  {
+    "number": "162",
+    "title": "Challenge 162",
+    "image": "challenge_overlays/challenge_162.png",
+    "description": "Cat pass wall A, armjump wall B. Feet can’t touch floor, climb up required.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/84bvkega2gg2"
+  },
+  {
+    "number": "163",
+    "title": "Challenge 163",
+    "image": "challenge_overlays/challenge_163.png",
+    "description": "TicTac off wall A Pre block B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/0xrtth3wqq1u"
+  },
+  {
+    "number": "164",
+    "title": "Challenge 164",
+    "image": "challenge_overlays/challenge_164.png",
+    "description": "Cat pass wall A, pre wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/j8engylmvkr0"
+  },
+  {
+    "number": "165",
+    "title": "Challenge 165",
+    "image": "challenge_overlays/challenge_165.png",
+    "description": "Reverse wall A, pre block B. No stick required. Slip landings not accepted.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ghrlqnxulxmo"
+  },
+  {
+    "number": "166",
+    "title": "Challenge 166",
+    "image": "challenge_overlays/challenge_166.png",
+    "description": "Dive roll across the top of island",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rprfapvk9nit"
+  },
+  {
+    "number": "167",
+    "title": "Challenge 167",
+    "image": "challenge_overlays/challenge_167.png",
+    "description": "Punch (2 foot takeoff) dive roll off wall A to block B. Step ups allowed for run-up.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vqpukoobdtqm"
+  },
+  {
+    "number": "168",
+    "title": "Challenge 168",
+    "image": "challenge_overlays/challenge_168.png",
+    "description": "Dive catpass from block A to wall B. Any setup of takeoff accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/umitijyew3ii"
+  },
+  {
+    "number": "169",
+    "title": "Challenge 169",
+    "image": "challenge_overlays/challenge_169.png",
+    "description": "Flick up here. Do a \"danish flick\" up - from waist, no using feet on front wall.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qj1vpbadeoz9"
+  },
+  {
+    "number": "170",
+    "title": "Challenge 170",
+    "image": "challenge_overlays/challenge_170.png",
+    "description": "From A, lazy over B onto bum spin, dismount off C with a spin.",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/djgsoovxm14p",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/djgsoovxm14p"
+  },
+  {
+    "number": "171",
+    "title": "Challenge 171",
+    "image": "challenge_overlays/challenge_171.png",
+    "description": "Hand on wall and rail, Swing gainer on rail A, Punch from wall B, Into pole cat on C.",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/4qpics8is2mn",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/4qpics8is2mn"
+  },
+  {
+    "number": "172",
+    "title": "Challenge 172",
+    "image": "challenge_overlays/challenge_172.png",
+    "description": "Tic tac A, Land on B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/nzkyh44hsir4"
+  },
+  {
+    "number": "173",
+    "title": "Challenge 173",
+    "image": "challenge_overlays/challenge_173.png",
+    "description": "Standing pre from A to B, Dive Kong off C.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qdnx7fmslati"
+  },
+  {
+    "number": "174",
+    "title": "Challenge 174",
+    "image": "challenge_overlays/challenge_174.png",
+    "description": "Kong up block A, Dive catpass B, Two steps on floor Running speed step from C to D",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/kujebya7vyns"
+  },
+  {
+    "number": "175",
+    "title": "Challenge 175",
+    "image": "challenge_overlays/challenge_175.png",
+    "description": "Dash sister A Two steps on the ground Speed step sister B (Must be continuous)",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cfbripahx6st"
+  },
+  {
+    "number": "176",
+    "title": "Challenge 176",
+    "image": "challenge_overlays/challenge_176.png",
+    "description": "Balance from A to B (top of tower to lowest rail) Hands must not touch the rails.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cr6ibhiq2qki"
+  },
+  {
+    "number": "177",
+    "title": "Challenge 177",
+    "image": "challenge_overlays/challenge_177.png",
+    "description": "Running pre from A to B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xtmfn5aubr7w"
+  },
+  {
+    "number": "178",
+    "title": "Challenge 178",
+    "image": "challenge_overlays/challenge_178.png",
+    "description": "Kong up (land two feet on top) island A One step to B Arm jump C Climb up required.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/c7zj5qdtqtl2"
+  },
+  {
+    "number": "179",
+    "title": "Challenge 179",
+    "image": "challenge_overlays/challenge_179.png",
+    "description": "Kong up A, Plyo Speed step B. No pauses.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/dgymgrpdstph"
+  },
+  {
+    "number": "180",
+    "title": "Challenge 180",
+    "image": "challenge_overlays/challenge_180.png",
+    "description": "Lache arm jump from A to B. No climb up.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/miwul1zvrqnr"
+  },
+  {
+    "number": "181",
+    "title": "Challenge 181",
+    "image": "challenge_overlays/challenge_181.png",
+    "description": "Kong speed step Yardito from A to B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/thu9i6qlfoh3"
+  },
+  {
+    "number": "182",
+    "title": "Challenge 182",
+    "image": "challenge_overlays/challenge_182.png",
+    "description": "Kong up wall A Plyo wall B Pre white wall C No stick required.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rrns0qgs0twn"
+  },
+  {
+    "number": "183",
+    "title": "Challenge 183",
+    "image": "challenge_overlays/challenge_183.png",
+    "description": "Arm jump A to B. Standing or running start accepted",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rfakocudhn54"
+  },
+  {
+    "number": "184",
+    "title": "Challenge 184",
+    "image": "challenge_overlays/challenge_184.png",
+    "description": "Standing pre from A to B. Stick required",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/iftlpwbi27eb"
+  },
+  {
+    "number": "185",
+    "title": "Challenge 185",
+    "image": "challenge_overlays/challenge_185.png",
+    "description": "Standing on block/wall A Pre white wall B Stick required.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/zdcvmd7mpi7i"
+  },
+  {
+    "number": "186",
+    "title": "Challenge 186",
+    "image": "challenge_overlays/challenge_186.png",
+    "description": "Running pre from Block A to tower B. Any run up allowed, step up allowed.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/alxytba82uds"
+  },
+  {
+    "number": "187",
+    "title": "Challenge 187",
+    "image": "challenge_overlays/challenge_187.png",
+    "description": "Take off wall A, dive catpass wall B. Punch or gallop accepted. Sideways exit accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/mulrljtznr5y"
+  },
+  {
+    "number": "188",
+    "title": "Challenge 188",
+    "image": "challenge_overlays/challenge_188.png",
+    "description": "Catpass speedstep the block from edge A to edge B. Doesn’t need to be totally edge to edge, reaching speed steps accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/1ahkfrjxnw2l"
+  },
+  {
+    "number": "189",
+    "title": "Challenge 189",
+    "image": "challenge_overlays/challenge_189.png",
+    "description": "Double catpass the block from edge A to edge B. Hands must be within 30cm from the edges. Slight side exit accepted, but if it starts loo...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/by79n92ep65o"
+  },
+  {
+    "number": "190",
+    "title": "Challenge 190",
+    "image": "challenge_overlays/challenge_190.png",
+    "description": "Dive from floor A, catpass block B. Hands must land within 30cm of the edge. Sideways exit accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ndulcvvv56gl"
+  },
+  {
+    "number": "191",
+    "title": "Challenge 191",
+    "image": "challenge_overlays/challenge_191.png",
+    "description": "Catpass wall A to clear / hurdle wall B. Hands cannot touch the floor after the hurdle, as this would be a buckle. Unless you roll out, th...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/llpj80rpbyr0"
+  },
+  {
+    "number": "192",
+    "title": "Challenge 192",
+    "image": "challenge_overlays/challenge_192.png",
+    "description": "Hurdle from floor A to stride block B to splat the slant C. Hands cannot touch the floor after the splat as this is a buckle. Back roll af...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/mlqqucvqxyre"
+  },
+  {
+    "number": "193",
+    "title": "Challenge 193",
+    "image": "challenge_overlays/challenge_193.png",
+    "description": "Catpass block A to edge of block B, plyo to pre the island C. Gallop not accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qkgecjgr2gl4"
+  },
+  {
+    "number": "194",
+    "title": "Challenge 194",
+    "image": "challenge_overlays/challenge_194.png",
+    "description": "Flip pre from Block A to middle earth wall B. Wobbly stick accepted, slip landings not accepted. Heels over edge.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/lzdk1bbht0hh"
+  },
+  {
+    "number": "195",
+    "title": "Challenge 195",
+    "image": "challenge_overlays/challenge_195.png",
+    "description": "Pre from Block A to wall of yardito B. Any takeoff accepted, running, standing, plyo, gallop etc.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/f9gg8hcc6mu5"
+  },
+  {
+    "number": "196",
+    "title": "Challenge 196",
+    "image": "challenge_overlays/challenge_196.png",
+    "description": "Catpass wall A, pre wall B, plyo to wall C to plyo dive catpass yardito D. Hands must be within 30cm of edge of Yardito. Sideways exit not...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wl4str2filcn"
+  },
+  {
+    "number": "197",
+    "title": "Challenge 197",
+    "image": "challenge_overlays/challenge_197.png",
+    "description": "Running 360 pre from Block A to island B. Landing doesn’t need to be in placement, but slip landings not accepted. Hands down landings not...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/sqct19cgpocz"
+  },
+  {
+    "number": "198",
+    "title": "Challenge 198",
+    "image": "challenge_overlays/challenge_198.png",
+    "description": "Vault island A, two steps on the ground, vault Block B, two steps on the ground, vault wall C. The vault on Block B can be a combo vault, (...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qmm4oeideab8"
+  },
+  {
+    "number": "199",
+    "title": "Challenge 199",
+    "image": "challenge_overlays/challenge_199.png",
+    "description": "Catpass Brother A, splat Brother B. Hands can’t touch wall B or the floor afterwards. Back roll after the splat not accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/yuhnjlnbenmm"
+  },
+  {
+    "number": "200",
+    "title": "Challenge 200",
+    "image": "challenge_overlays/challenge_200.png",
+    "description": "Take off white wall, Dive catpass yardito block B. Gallop or punch takeoff accepted. Hands must be within 30cm of the edge of B. Sideways...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/5bv9dcvilg2c"
+  },
+  {
+    "number": "201",
+    "title": "Challenge 201",
+    "image": "challenge_overlays/challenge_201.png",
+    "description": "Reverse the Mole A, pre the white curb B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/yfyrzp6g6hkm"
+  },
+  {
+    "number": "202",
+    "title": "Challenge 202",
+    "image": "challenge_overlays/challenge_202.png",
+    "description": "Flip from Block A, pre wall B. No stick required. Slip landings rejected.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/oazna3zcqki4"
+  },
+  {
+    "number": "203",
+    "title": "Challenge 203",
+    "image": "challenge_overlays/challenge_203.png",
+    "description": "Stride from wall A, stride the corner of Block B, pre to island C. Foot can land wherever you want on the block, but people usually use th...",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/e0qryd93f0b6"
+  },
+  {
+    "number": "204",
+    "title": "Challenge 204",
+    "image": "challenge_overlays/challenge_204.png",
+    "description": "Take off wall A, stride wall B, stride edge of Block C, pre island D.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/kgoji9txohx3"
+  },
+  {
+    "number": "205",
+    "title": "Challenge 205",
+    "image": "challenge_overlays/challenge_205.png",
+    "description": "Cat pass wall A, pre white wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jcz6gkvqqyof"
+  },
+  {
+    "number": "206",
+    "title": "Challenge 206",
+    "image": "challenge_overlays/challenge_206.png",
+    "description": "Catpass wall A, pre white wall B, plyo dive catpass yardito block C. Hands must be within 30cm of the edge on the catpass C. Sideways exit...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/88sw9hnu1ign"
+  },
+  {
+    "number": "207",
+    "title": "Challenge 207",
+    "image": "challenge_overlays/challenge_207.png",
+    "description": "Standing pre from corner of the high rails A to middle wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wanywamr12pj"
+  },
+  {
+    "number": "208",
+    "title": "Challenge 208",
+    "image": "challenge_overlays/challenge_208.png",
+    "description": "Catpass wall A to pre middle step B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/7fir7wkbhnv8"
+  },
+  {
+    "number": "209",
+    "title": "Challenge 209",
+    "image": "challenge_overlays/challenge_209.png",
+    "description": "Dive catpass from middle step A to wall B. Gallop or punch accepted. Sideways exit not accepted.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/8ccoi42vc7oc"
+  },
+  {
+    "number": "210",
+    "title": "Challenge 210",
+    "image": "challenge_overlays/challenge_210.png",
+    "description": "Running pre from corner of rails A to higher step B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/sxzxlxrofqym"
+  },
+  {
+    "number": "211",
+    "title": "Challenge 211",
+    "image": "challenge_overlays/challenge_211.png",
+    "description": "Punch dive catpass from wall A to wall B. Step ups allowed for takeoff.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wqozs2ye1x5m"
+  },
+  {
+    "number": "212",
+    "title": "Challenge 212",
+    "image": "challenge_overlays/challenge_212.png",
+    "description": "Standing from wall A, pre wall B, plyo to pre back rail C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fgsnyfjwxkje"
+  },
+  {
+    "number": "213",
+    "title": "Challenge 213",
+    "image": "challenge_overlays/challenge_213.png",
+    "description": "360 pre from wall A to wall B. No stick required.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qka2qany6htq"
+  },
+  {
+    "number": "214",
+    "title": "Challenge 214",
+    "image": "challenge_overlays/challenge_214.png",
+    "description": "Hurdle from floor A, pre rail B, plyo to pre wall C. Must be continuous momentum.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wmxg2ru4ycmk"
+  },
+  {
+    "number": "215",
+    "title": "Challenge 215",
+    "image": "challenge_overlays/challenge_215.png",
+    "description": "Take off wall A, stride middle wall B, pre wall C. Any setup accepted for run up before take off on wall A. Step ups allowed.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fkypbuustwhx"
+  },
+  {
+    "number": "216",
+    "title": "Challenge 216",
+    "image": "challenge_overlays/challenge_216.png",
+    "description": "Cat pass brother A, pre sister B, plyo dive catpass wall C. Sideways exit accepted on the catpass at C.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/u0v8nlctlmkp"
+  },
+  {
+    "number": "217",
+    "title": "Challenge 217",
+    "image": "challenge_overlays/challenge_217.png",
+    "description": "Start in armjump on island A, 180 armjump up to tower B, 180 pre to island C. Must be continuous, no reset or bouncing allowed on the 180 f...",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/e02ecwvdjjow"
+  },
+  {
+    "number": "218",
+    "title": "Challenge 218",
+    "image": "challenge_overlays/challenge_218.png",
+    "description": "Monkey up splat from tower A to pre island B. Not a 180, not a double tap.",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/qvs7xlxzpww0",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qvs7xlxzpww0"
+  },
+  {
+    "number": "219",
+    "title": "Challenge 219",
+    "image": "challenge_overlays/challenge_219.png",
+    "description": "Any vault island A, two steps on the ground, catpass edge of Block B to stride from edge C, to speedstep wall D. Edge C is on the block, wi...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/0z7dqmzkrjpc"
+  },
+  {
+    "number": "220",
+    "title": "Challenge 220",
+    "image": "challenge_overlays/challenge_220.png",
+    "description": "Cat pass edge of block A, stride edge of block B, pre wall C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fn3pclwhya6s"
+  },
+  {
+    "number": "221",
+    "title": "Challenge 221",
+    "image": "challenge_overlays/challenge_221.png",
+    "description": "Backflip pre on big ghandi. Don’t have to stick, but you do have to stay on him.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/imoesf476ru8"
+  },
+  {
+    "number": "222",
+    "title": "Challenge 222",
+    "image": "challenge_overlays/challenge_222.png",
+    "description": "Any static flip pre on the wall. Standing side, backflip etc. Stick doesn’t need to be on the edge, but foot repositioning or stepping ou...",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/3acmr2gick3e"
+  },
+  {
+    "number": "223",
+    "title": "Challenge 223",
+    "image": "challenge_overlays/challenge_223.png",
+    "description": "Take off white wall A, armjump tower B. Must climb up.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/bsi3wwcha03f"
+  },
+  {
+    "number": "224",
+    "title": "Challenge 224",
+    "image": "challenge_overlays/challenge_224.png",
+    "description": "Catpass block A, stride edge of block B, armjump tower C. Must climb up.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cotpihdnsjc6"
+  },
+  {
+    "number": "225",
+    "title": "Challenge 225",
+    "image": "challenge_overlays/challenge_225.png",
+    "description": "Standing on block A, armjump island B. Must climb up. Foot or bum can’t touch ground. We will be strict with heel taps.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/el5oz70zqgyu"
+  },
+  {
+    "number": "226",
+    "title": "Challenge 226",
+    "image": "challenge_overlays/challenge_226.png",
+    "description": "Hurdle wall A, pre lower step B. Gallop or running hurdle accepted.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ziqwgesbj6w5"
+  },
+  {
+    "number": "227",
+    "title": "Challenge 227",
+    "image": "challenge_overlays/challenge_227.png",
+    "description": "In arm jump position on wall A 180 pre B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/einkgd37jadv"
+  },
+  {
+    "number": "228",
+    "title": "Challenge 228",
+    "image": "challenge_overlays/challenge_228.png",
+    "description": "Standing on wall A Arm jump tower B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/dkijvp6qwrc5"
+  },
+  {
+    "number": "229",
+    "title": "Challenge 229",
+    "image": "challenge_overlays/challenge_229.png",
+    "description": "Take off from wall A Tictak off wall B Land anywhere on walls C No stick required",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/caswi6m7t8k3"
+  },
+  {
+    "number": "230",
+    "title": "Challenge 230",
+    "image": "challenge_overlays/challenge_230.png",
+    "description": "Tictak off Wall A Pre either wall on Nigel’s demise B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rlcr7kopupw5"
+  },
+  {
+    "number": "231",
+    "title": "Challenge 231",
+    "image": "challenge_overlays/challenge_231.png",
+    "description": "Standing on wall A Arm jump wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fqgiq0rjkrmt"
+  },
+  {
+    "number": "232",
+    "title": "Challenge 232",
+    "image": "challenge_overlays/challenge_232.png",
+    "description": "Standing on wall A Arm jump wall B 180 back to wall A No pause allowed",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/v3tkoc9nyvag"
+  },
+  {
+    "number": "233",
+    "title": "Challenge 233",
+    "image": "challenge_overlays/challenge_233.png",
+    "description": "Tictak off wall A Pre lower step B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/uwpnrgvrydbf"
+  },
+  {
+    "number": "234",
+    "title": "Challenge 234",
+    "image": "challenge_overlays/challenge_234.png",
+    "description": "From Wall A Skateboard pre rail B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qhj3exowtng9"
+  },
+  {
+    "number": "235",
+    "title": "Challenge 235",
+    "image": "challenge_overlays/challenge_235.png",
+    "description": "Tic tac from wall A Pre white curb B Plyo to ledge C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qk6xvaka4xnj"
+  },
+  {
+    "number": "236",
+    "title": "Challenge 236",
+    "image": "challenge_overlays/challenge_236.png",
+    "description": "Catpass wall A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xifn2mvbpwow"
+  },
+  {
+    "number": "237",
+    "title": "Challenge 237",
+    "image": "challenge_overlays/challenge_237.png",
+    "description": "Running 180 pre off wall A to wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jnoadlzoyx10"
+  },
+  {
+    "number": "238",
+    "title": "Challenge 238",
+    "image": "challenge_overlays/challenge_238.png",
+    "description": "Double tap (wavezilla) off wall A to wall B. No stick required. Slip landings rejected.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/0fgiyson3tzf"
+  },
+  {
+    "number": "239",
+    "title": "Challenge 239",
+    "image": "challenge_overlays/challenge_239.png",
+    "description": "Dash wall A Pre wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/sk4sa1umkbrb"
+  },
+  {
+    "number": "240",
+    "title": "Challenge 240",
+    "image": "challenge_overlays/challenge_240.png",
+    "description": "Reverse wall A Pre wall B No stick required",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/5rr9nw0fzzxs"
+  },
+  {
+    "number": "241",
+    "title": "Challenge 241",
+    "image": "challenge_overlays/challenge_241.png",
+    "description": "Standing pre from wall A to wall B. No stick required. Slip landings rejected.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/13qj5qiensoy"
+  },
+  {
+    "number": "242",
+    "title": "Challenge 242",
+    "image": "challenge_overlays/challenge_242.png",
+    "description": "Hurdle wall A Pre wall B Gallop or running hurdle accepted No stick required",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/sybzyhifhqam"
+  },
+  {
+    "number": "243",
+    "title": "Challenge 243",
+    "image": "challenge_overlays/challenge_243.png",
+    "description": "Standing pre from wall A to wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vryhvsnztleq"
+  },
+  {
+    "number": "244",
+    "title": "Challenge 244",
+    "image": "challenge_overlays/challenge_244.png",
+    "description": "Tic wall wall A Swing on bar B Straight from back swing splat wall A to dive roll floor C",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/6ngldzt2qi8v",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/6ngldzt2qi8v"
+  },
+  {
+    "number": "245",
+    "title": "Challenge 245",
+    "image": "challenge_overlays/challenge_245.png",
+    "description": "Catpass wall A Pre top platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/yqcaqrxoiybf"
+  },
+  {
+    "number": "246",
+    "title": "Challenge 246",
+    "image": "challenge_overlays/challenge_246.png",
+    "description": "Kong Rail A Clear middle rail Skateboard Pre Rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/nkkpfkn3wnfv"
+  },
+  {
+    "number": "247",
+    "title": "Challenge 247",
+    "image": "challenge_overlays/challenge_247.png",
+    "description": "Running pre from Block A to island B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/yekmplh26aif"
+  },
+  {
+    "number": "248",
+    "title": "Challenge 248",
+    "image": "challenge_overlays/challenge_248.png",
+    "description": "Cat pass wall A, armjump wall B. Climb up required. Obvs.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/sfnzts17ug6u"
+  },
+  {
+    "number": "249",
+    "title": "Challenge 249",
+    "image": "challenge_overlays/challenge_249.png",
+    "description": "Punch dive off wall A Catpass wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/gvbs22lwedk3"
+  },
+  {
+    "number": "250",
+    "title": "Challenge 250",
+    "image": "challenge_overlays/challenge_250.png",
+    "description": "Running armjump from wall A to wall B. Step up allowed. Climb up required.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/rvzk9h8nafmp"
+  },
+  {
+    "number": "251",
+    "title": "Challenge 251",
+    "image": "challenge_overlays/challenge_251.png",
+    "description": "From platform A Pre rail B Running or standing allowed",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ukwxlloqzeau"
+  },
+  {
+    "number": "252",
+    "title": "Challenge 252",
+    "image": "challenge_overlays/challenge_252.png",
+    "description": "Kong wall A Splat wall B Dive roll floor C",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/mdfvdm5jcmwy"
+  },
+  {
+    "number": "253",
+    "title": "Challenge 253",
+    "image": "challenge_overlays/challenge_253.png",
+    "description": "Standing pre from Tower A to island B. Slip landings rejected. Heels must be over the edge.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/37bdesbvdt42"
+  },
+  {
+    "number": "254",
+    "title": "Challenge 254",
+    "image": "challenge_overlays/challenge_254.png",
+    "description": "Right foot 270 tic tac wall A Pre rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fa9bkv2qxupv"
+  },
+  {
+    "number": "255",
+    "title": "Challenge 255",
+    "image": "challenge_overlays/challenge_255.png",
+    "description": "Plyo off white Wall A Pre wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/tr2gqvqsgej7"
+  },
+  {
+    "number": "256",
+    "title": "Challenge 256",
+    "image": "challenge_overlays/challenge_256.png",
+    "description": "Standing on wall A Plyo down wall B Pre wall C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ijr8ppwg7gie"
+  },
+  {
+    "number": "257",
+    "title": "Challenge 257",
+    "image": "challenge_overlays/challenge_257.png",
+    "description": "From platform A Stride or plyo wall B Pre rail C From running or standing allowed",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qte7zfdnzi8z"
+  },
+  {
+    "number": "258",
+    "title": "Challenge 258",
+    "image": "challenge_overlays/challenge_258.png",
+    "description": "Perpy (skateboard) pre from wall A to rail B. Wobbly stick accepted, some foot sliding accepted. If the foot slides more than 10cm, it’s r...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/mug8kkjwahqm"
+  },
+  {
+    "number": "259",
+    "title": "Challenge 259",
+    "image": "challenge_overlays/challenge_259.png",
+    "description": "Dive kong across platform A One or two steps to donkey kick wall B Backwards pre platform A (Stick can be full foot)",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/urvvk7rbc53m",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/urvvk7rbc53m"
+  },
+  {
+    "number": "260",
+    "title": "Challenge 260",
+    "image": "challenge_overlays/challenge_260.png",
+    "description": "Standing on wall A, pre to wall B, plyo to middle rail C.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/jbemjs9wmdow"
+  },
+  {
+    "number": "261",
+    "title": "Challenge 261",
+    "image": "challenge_overlays/challenge_261.png",
+    "description": "Standing perpy (skateboard) pre from wall A to sideways rail B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hvcqxkd3xbwx"
+  },
+  {
+    "number": "262",
+    "title": "Challenge 262",
+    "image": "challenge_overlays/challenge_262.png",
+    "description": "Standing pre from Brother A to low rail B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/dtsp1bmpvxdh"
+  },
+  {
+    "number": "263",
+    "title": "Challenge 263",
+    "image": "challenge_overlays/challenge_263.png",
+    "description": "Start run up from A Running pre from wall B To high rail C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/bhqwivzm2kq6"
+  },
+  {
+    "number": "264",
+    "title": "Challenge 264",
+    "image": "challenge_overlays/challenge_264.png",
+    "description": "Catpass Brother A, pre sister B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/1lra3wndw62r"
+  },
+  {
+    "number": "265",
+    "title": "Challenge 265",
+    "image": "challenge_overlays/challenge_265.png",
+    "description": "Angled kong wall A Pre rail B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/d8zcmq4mfz4g"
+  },
+  {
+    "number": "266",
+    "title": "Challenge 266",
+    "image": "challenge_overlays/challenge_266.png",
+    "description": "Standing on wall A Arm jump island B No heels or bum touching the floor. Climb up required.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/gt2ftrupbeqg"
+  },
+  {
+    "number": "267",
+    "title": "Challenge 267",
+    "image": "challenge_overlays/challenge_267.png",
+    "description": "Standing or punch dive the sisters. Standing pre from the brother accepted as an entry. Step ups for a running approach to plyo/punch div...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/5nvmqq7pkxzx"
+  },
+  {
+    "number": "268",
+    "title": "Challenge 268",
+    "image": "challenge_overlays/challenge_268.png",
+    "description": "Palmflip a wall Any wall counts",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/c7io2fwk1oet"
+  },
+  {
+    "number": "269",
+    "title": "Challenge 269",
+    "image": "challenge_overlays/challenge_269.png",
+    "description": "Tic tac side of wall A onto platform B Roll over platform C (No more than 2 steps on platform B)",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cshtcppet985"
+  },
+  {
+    "number": "270",
+    "title": "Challenge 270",
+    "image": "challenge_overlays/challenge_270.png",
+    "description": "Cat pass wall A, pre sister B. You may grab the pole to stay on. Feet must land on the balls of the feet, but they can split to land eithe...",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xflkgwpoqzpv"
+  },
+  {
+    "number": "271",
+    "title": "Challenge 271",
+    "image": "challenge_overlays/challenge_271.png",
+    "description": "Off rail A Catpass rail B Pre rail C Any run-up to rail A accepted No stick required No bounceback!",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/d3jjncdrssix"
+  },
+  {
+    "number": "272",
+    "title": "Challenge 272",
+    "image": "challenge_overlays/challenge_272.png",
+    "description": "Off platform A Catpass wall B Arm jump wall C No side cat pass but leap frog accepted",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/buvkkcb57wga"
+  },
+  {
+    "number": "273",
+    "title": "Challenge 273",
+    "image": "challenge_overlays/challenge_273.png",
+    "description": "Cast off rail A Pre ledge B",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/qjb8xirag2bp",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qjb8xirag2bp"
+  },
+  {
+    "number": "274",
+    "title": "Challenge 274",
+    "image": "challenge_overlays/challenge_274.png",
+    "description": "Standing on Rail A Pole cat B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/gvjhxlig6wx7"
+  },
+  {
+    "number": "275",
+    "title": "Challenge 275",
+    "image": "challenge_overlays/challenge_275.png",
+    "description": "Catpass brother A, pre sister B, dive catpass sister C. Must be fluid, no big pauses. Feet cannot readjust or move during the plyo into th...",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/fqw36jpuorzf"
+  },
+  {
+    "number": "276",
+    "title": "Challenge 276",
+    "image": "challenge_overlays/challenge_276.png",
+    "description": "Catpass rail A, pre rail B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/nuqdhpbfqni2"
+  },
+  {
+    "number": "277",
+    "title": "Challenge 277",
+    "image": "challenge_overlays/challenge_277.png",
+    "description": "Standing pre from Tower A to rail B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vtaqareiqfk3"
+  },
+  {
+    "number": "278",
+    "title": "Challenge 278",
+    "image": "challenge_overlays/challenge_278.png",
+    "description": "Tictak off wall A Pre higher platform B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xvenjkxtewuu"
+  },
+  {
+    "number": "279",
+    "title": "Challenge 279",
+    "image": "challenge_overlays/challenge_279.png",
+    "description": "Standing pre from rail A to tower B. No stick required. Slip landings and hands down landings rejected.",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/69yo0qe655kv"
+  },
+  {
+    "number": "280",
+    "title": "Challenge 280",
+    "image": "challenge_overlays/challenge_280.png",
+    "description": "From platform A Dive Catpass wall B Pre rail C No stick required",
+    "stickRequired": "No",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/xogxfsowolya"
+  },
+  {
+    "number": "281",
+    "title": "Challenge 281",
+    "image": "challenge_overlays/challenge_281.png",
+    "description": "Scoot through corner A to pre ledge B Scoot through corner C to pre ledge D",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/blwf4lgurwxu",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/blwf4lgurwxu"
+  },
+  {
+    "number": "282",
+    "title": "Challenge 282",
+    "image": "challenge_overlays/challenge_282.png",
+    "description": "Flick up to vault this rail Any vault counts",
+    "stickRequired": "Unclear",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/cewj3egcssvy",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/cewj3egcssvy"
+  },
+  {
+    "number": "283",
+    "title": "Challenge 283",
+    "image": "challenge_overlays/challenge_283.png",
+    "description": "Cat pass narwhal A Pre white curb B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wzvm3n9mkfiw"
+  },
+  {
+    "number": "284",
+    "title": "Challenge 284",
+    "image": "challenge_overlays/challenge_284.png",
+    "description": "Wallflip off slant. Can be normal or layout.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/oib5gwwf1kfu"
+  },
+  {
+    "number": "285",
+    "title": "Challenge 285",
+    "image": "challenge_overlays/challenge_285.png",
+    "description": "Any wallflip other than standard wallflip or layout. Inward side, front, wall full, trapdoor backflip etc.",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/k1kygu7yqydq"
+  },
+  {
+    "number": "286",
+    "title": "Challenge 286",
+    "image": "challenge_overlays/challenge_286.png",
+    "description": "Running pre from island A to tower B. Step up allowed for run up.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/bnvtmvlardby"
+  },
+  {
+    "number": "287",
+    "title": "Challenge 287",
+    "image": "challenge_overlays/challenge_287.png",
+    "description": "270 tic tac wall A Speedstep wall B OR 270 tic tac wall B Speedstep wall A",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/ldbqxqfvfwre"
+  },
+  {
+    "number": "288",
+    "title": "Challenge 288",
+    "image": "challenge_overlays/challenge_288.png",
+    "description": "Running pre from step A to wall B.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/r7ntccakivho"
+  },
+  {
+    "number": "289",
+    "title": "Challenge 289",
+    "image": "challenge_overlays/challenge_289.png",
+    "description": "Lache bar A (any set up accepted) 180 stride curb B Pre ledge C",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/zkdyx26bsebr"
+  },
+  {
+    "number": "290",
+    "title": "Challenge 290",
+    "image": "challenge_overlays/challenge_290.png",
+    "description": "Lache off rail A Pre tower B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/hjxdl0ujjgs9"
+  },
+  {
+    "number": "291",
+    "title": "Challenge 291",
+    "image": "challenge_overlays/challenge_291.png",
+    "description": "Cat pass Yardito (block bit) A Pre white wall B",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/qjtwkgxq4cht"
+  },
+  {
+    "number": "292",
+    "title": "Challenge 292",
+    "image": "challenge_overlays/challenge_292.png",
+    "description": "Standing pre from high wall A to wall B. Must land on the short side of the wall, as seen in image.",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/vcaeaebdv62q"
+  },
+  {
+    "number": "293",
+    "title": "Challenge 293",
+    "image": "challenge_overlays/challenge_293.png",
+    "description": "Hurdle Yardito wall A Speed step Yardito wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/1acgkqcczcdz"
+  },
+  {
+    "number": "295",
+    "title": "Challenge 295",
+    "image": "challenge_overlays/challenge_295.png",
+    "description": "Kong wall A Splat tower B Pre back to wall A Plyo to skateboard pre white wall C (above ‘UNIT’)",
+    "stickRequired": "Yes",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/upbtzc8yyems"
+  },
+  {
+    "number": "296",
+    "title": "Challenge 296",
+    "image": "challenge_overlays/challenge_296.png",
+    "description": "Jump from rail A Arm jump wall B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/b2bv3toijijj"
+  },
+  {
+    "number": "297",
+    "title": "Challenge 297",
+    "image": "challenge_overlays/challenge_297.png",
+    "description": "Stride challenge. Take off rail A, stride rail B, stride rail C, pre wall D. Step up allowed for run up.",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/wvcslzas2gsw",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/wvcslzas2gsw"
+  },
+  {
+    "number": "298",
+    "title": "Challenge 298",
+    "image": "challenge_overlays/challenge_298.png",
+    "description": "Standing platform A Arm jump platform B",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/zayfyvyiojyo"
+  },
+  {
+    "number": "299",
+    "title": "Challenge 299",
+    "image": "challenge_overlays/challenge_299.png",
+    "description": "Take off from Brother wall A Dive roll on top of thin wall B Any setup allowed (vaults, step off etc).",
+    "stickRequired": "Unclear",
+    "videoSample": "",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/4gyo6icugv1j"
+  },
+  {
+    "number": "300",
+    "title": "Challenge 300",
+    "image": "challenge_overlays/challenge_300.png",
+    "description": "Start at wall A, reverse into bum spin on wall B, pre wall C - check example clip.",
+    "stickRequired": "Yes",
+    "videoSample": "https://yardtakeover.co.uk/app/challenges/kmgoxv8grqtx",
+    "challengeLink": "https://yardtakeover.co.uk/app/challenges/kmgoxv8grqtx"
+  }
+];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // ignore quota errors on mobile
+      }
+    }
+
+    function applyRowState(tr, challenge, stateForId) {
+      const checkbox = tr.querySelector('input[type="checkbox"]');
+      const select = tr.querySelector('select.status-select');
+
+      const completed = !!(stateForId && stateForId.completed);
+      const status = stateForId && stateForId.status || '';
+
+      checkbox.checked = completed;
+      select.value = status;
+
+      tr.classList.remove('completed', 'status-green', 'status-orange', 'status-red');
+
+      if (completed) {
+        tr.classList.add('completed');
+      } else {
+        if (status === 'green') tr.classList.add('status-green');
+        if (status === 'orange') tr.classList.add('status-orange');
+        if (status === 'red') tr.classList.add('status-red');
+      }
+    }
+
+    function renderTable(data, state) {
+      const tbody = document.querySelector('#challenges-table tbody');
+      tbody.innerHTML = '';
+
+      const rank = (status) => {
+        if (status === 'green') return 0;
+        if (status === 'orange') return 1;
+        if (status === 'red') return 2;
+        return 3;
+      };
+
+      const sorted = [...data].sort((a, b) => {
+        const saState = state[a.number] || {};
+        const sbState = state[b.number] || {};
+
+        const ca = saState.completed ? 1 : 0;
+        const cb = sbState.completed ? 1 : 0;
+        if (ca !== cb) return ca - cb; // completed (1) sorted after incomplete (0)
+
+        const sa = saState.status || '';
+        const sb = sbState.status || '';
+        const ra = rank(sa);
+        const rb = rank(sb);
+        if (ra !== rb) return ra - rb;
+        const na = parseInt(a.number, 10);
+        const nb = parseInt(b.number, 10);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return (a.title || '').localeCompare(b.title || '');
+      });
+
+      sorted.forEach(ch => {
+        const id = ch.number || ch.title;
+        const tr = document.createElement('tr');
+        tr.dataset.id = id;
+
+        const tickCell = document.createElement('td');
+        tickCell.className = 'checkbox-cell';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'complete-checkbox';
+        checkbox.dataset.id = id;
+        tickCell.appendChild(checkbox);
+
+        const numCell = document.createElement('td');
+        numCell.className = 'num-cell';
+        numCell.textContent = ch.number;
+
+        const imageCell = document.createElement('td');
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'image-thumb';
+        const img = document.createElement('img');
+        img.decoding = 'async';
+        img.src = ch.image;
+        img.alt = ch.title;
+        imageWrapper.appendChild(img);
+        imageCell.appendChild(imageWrapper);
+
+        const descCell = document.createElement('td');
+        descCell.className = 'desc-cell';
+        descCell.textContent = ch.description;
+
+        const stickCell = document.createElement('td');
+        const stickPill = document.createElement('span');
+        stickPill.className = 'pill';
+        const stickLower = (ch.stickRequired || '').toLowerCase();
+        if (stickLower.startsWith('yes')) {
+          stickPill.classList.add('stick-yes');
+          stickPill.textContent = 'Stick required';
+        } else if (stickLower.startsWith('no')) {
+          stickPill.classList.add('stick-no');
+          stickPill.textContent = 'No stick required';
+        } else {
+          stickPill.textContent = ch.stickRequired || 'Unclear';
+        }
+        stickCell.appendChild(stickPill);
+
+        const linksCell = document.createElement('td');
+        linksCell.className = 'links-cell';
+        if (ch.videoSample) {
+          const aVideo = document.createElement('a');
+          aVideo.href = ch.videoSample;
+          aVideo.target = '_blank';
+          aVideo.rel = 'noopener noreferrer';
+          aVideo.textContent = 'Video sample';
+          linksCell.appendChild(aVideo);
+        }
+        if (ch.challengeLink) {
+          const aPage = document.createElement('a');
+          aPage.href = ch.challengeLink;
+          aPage.target = '_blank';
+          aPage.rel = 'noopener noreferrer';
+          aPage.textContent = 'Challenge page';
+          linksCell.appendChild(aPage);
+        }
+
+        const statusCell = document.createElement('td');
+        const select = document.createElement('select');
+        select.className = 'status-select';
+        select.dataset.id = id;
+        select.innerHTML = `
+          <option value="">–</option>
+          <option value="green">Green</option>
+          <option value="orange">Orange</option>
+          <option value="red">Red</option>
+        `;
+        statusCell.appendChild(select);
+
+        tr.appendChild(tickCell);
+        tr.appendChild(numCell);
+        tr.appendChild(imageCell);
+        tr.appendChild(descCell);
+        tr.appendChild(stickCell);
+        tr.appendChild(linksCell);
+        tr.appendChild(statusCell);
+
+        tbody.appendChild(tr);
+
+        applyRowState(tr, ch, state[id]);
+      });
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch('challenges_data.json', { cache: 'no-store' });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch {
+        // fall through to inline data
+      }
+      return CHALLENGES_DATA;
+    }
+
+    async function init() {
+      const [data, state] = await Promise.all([loadData(), loadState()]);
+      renderTable(data, state);
+
+      const tbody = document.querySelector('#challenges-table tbody');
+
+      tbody.addEventListener('change', (e) => {
+        const target = e.target;
+        const id = target.dataset.id;
+        if (!id) return;
+
+        const state = loadState();
+        const rowState = state[id] || {};
+        const tr = tbody.querySelector(`tr[data-id=\"${CSS.escape(id)}\"]`);
+
+        if (target.matches('.complete-checkbox')) {
+          rowState.completed = target.checked;
+        }
+
+        if (target.matches('.status-select')) {
+          rowState.status = target.value;
+        }
+
+        state[id] = rowState;
+        saveState(state);
+        renderTable(data, state);
+      });
+
+      document.getElementById('clear-completed').addEventListener('click', () => {
+        const state = loadState();
+        Object.values(state).forEach(s => { s.completed = false; });
+        saveState(state);
+        document.querySelectorAll('.complete-checkbox').forEach(cb => {
+          cb.checked = false;
+        });
+        document.querySelectorAll('#challenges-table tbody tr').forEach(tr => {
+          tr.classList.remove('completed');
+        });
+      });
+
+      document.getElementById('clear-status').addEventListener('click', () => {
+        const state = loadState();
+        Object.values(state).forEach(s => { s.status = ''; });
+        saveState(state);
+        document.querySelectorAll('.status-select').forEach(sel => sel.value = '');
+        document.querySelectorAll('#challenges-table tbody tr').forEach(tr => {
+          tr.classList.remove('status-green', 'status-orange', 'status-red');
+        });
+      });
+
+      document.getElementById('clear-all').addEventListener('click', () => {
+        if (!confirm('Reset all progress and colours on this device?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        document.querySelectorAll('.complete-checkbox').forEach(cb => {
+          cb.checked = false;
+        });
+        document.querySelectorAll('.status-select').forEach(sel => sel.value = '');
+        document.querySelectorAll('#challenges-table tbody tr').forEach(tr => {
+          tr.classList.remove('completed', 'status-green', 'status-orange', 'status-red');
+        });
+      });
+
+      const topBtn = document.getElementById('scroll-top-btn');
+      const bottomBtn = document.getElementById('scroll-bottom-btn');
+
+      topBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      bottomBtn.addEventListener('click', () => {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      });
+    }
+
+    init().catch(err => {
+      console.error(err);
+      alert('Failed to load challenges. Make sure challenges_data.json is next to this HTML file.');
+    });
+  </script>
+</body>
+</html>
+
