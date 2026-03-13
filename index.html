@@ -190,20 +190,24 @@
       background-color: var(--row-blue) !important;
     }
 
-    tbody tr.completed .num-cell::before {
-      content: "✓ ";
-      color: #22c55e;
-      font-size: 0.9rem;
-    }
-
     .checkbox-cell {
       text-align: center;
       width: 56px;
+      vertical-align: middle;
     }
 
-    .num-cell {
-      white-space: nowrap;
+    .checkbox-cell .challenge-num {
+      display: block;
       font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    tbody tr.completed .checkbox-cell .challenge-num::before {
+      content: "✓ ";
+      color: #22c55e;
+      font-size: 0.9rem;
     }
 
     .desc-cell {
@@ -226,6 +230,7 @@
     .image-thumb img {
       display: block;
       width: 100%;
+      min-width:200px;
       height: auto;
       object-fit: contain;
     }
@@ -303,6 +308,33 @@
       .table-container {
         border-radius: 12px;
       }
+
+      /* Stack Stick, Links, Status vertically on mobile */
+      #challenges-table th:nth-child(4),
+      #challenges-table th:nth-child(5),
+      #challenges-table th:nth-child(6),
+      #challenges-table td:nth-child(4),
+      #challenges-table td:nth-child(5),
+      #challenges-table td:nth-child(6) {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        border-left: none;
+        border-right: none;
+      }
+
+      #challenges-table th:nth-child(4),
+      #challenges-table td:nth-child(4) {
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+      }
+
+      #challenges-table th:nth-child(5),
+      #challenges-table td:nth-child(5),
+      #challenges-table th:nth-child(6),
+      #challenges-table td:nth-child(6) {
+        padding-top: 4px;
+      }
     }
   </style>
 </head>
@@ -331,7 +363,6 @@
           <thead>
             <tr>
               <th>Done</th>
-              <th>#</th>
               <th>Image</th>
               <th>Description</th>
               <th>Stick?</th>
@@ -3125,15 +3156,15 @@
 
         const tickCell = document.createElement('td');
         tickCell.className = 'checkbox-cell';
+        const numSpan = document.createElement('span');
+        numSpan.className = 'challenge-num';
+        numSpan.textContent = ch.number;
+        tickCell.appendChild(numSpan);
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'complete-checkbox';
         checkbox.dataset.id = id;
         tickCell.appendChild(checkbox);
-
-        const numCell = document.createElement('td');
-        numCell.className = 'num-cell';
-        numCell.textContent = ch.number;
 
         const imageCell = document.createElement('td');
         const imageWrapper = document.createElement('div');
@@ -3155,10 +3186,10 @@
         const stickLower = (ch.stickRequired || '').toLowerCase();
         if (stickLower.startsWith('yes')) {
           stickPill.classList.add('stick-yes');
-          stickPill.textContent = 'Stick required';
+          stickPill.textContent = 'Stick';
         } else if (stickLower.startsWith('no')) {
           stickPill.classList.add('stick-no');
-          stickPill.textContent = 'No stick required';
+          stickPill.textContent = 'No stick';
         } else {
           stickPill.textContent = ch.stickRequired || 'Unclear';
         }
@@ -3179,7 +3210,7 @@
           aPage.href = ch.challengeLink;
           aPage.target = '_blank';
           aPage.rel = 'noopener noreferrer';
-          aPage.textContent = 'Challenge page';
+          aPage.textContent = 'Link';
           linksCell.appendChild(aPage);
         }
 
@@ -3196,7 +3227,6 @@
         statusCell.appendChild(select);
 
         tr.appendChild(tickCell);
-        tr.appendChild(numCell);
         tr.appendChild(imageCell);
         tr.appendChild(descCell);
         tr.appendChild(stickCell);
@@ -3209,15 +3239,7 @@
       });
     }
 
-    async function loadData() {
-      try {
-        const res = await fetch('challenges_data.json', { cache: 'no-store' });
-        if (res.ok) {
-          return await res.json();
-        }
-      } catch {
-        // fall through to inline data
-      }
+    function loadData() {
       return CHALLENGES_DATA;
     }
 
