@@ -296,6 +296,20 @@
       z-index: 50;
     }
 
+    tr.draggable-row {
+      cursor: grab;
+    }
+    tr.draggable-row:active {
+      cursor: grabbing;
+    }
+    tr.draggable-row.dragging {
+      opacity: 0.5;
+    }
+    tr.draggable-row.drag-over {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
     @media (max-width: 768px) {
       h1 {
         font-size: 1.2rem;
@@ -3130,6 +3144,13 @@
         return 3;
       };
 
+      const order = Array.isArray(state._order) ? state._order : [];
+      const orderIdx = (num) => {
+        const n = String(num);
+        const i = order.indexOf(n);
+        return i >= 0 ? i : 999999;
+      };
+
       const sorted = [...data].sort((a, b) => {
         const saState = state[a.number] || {};
         const sbState = state[b.number] || {};
@@ -3143,6 +3164,11 @@
         const ra = rank(sa);
         const rb = rank(sb);
         if (ra !== rb) return ra - rb;
+        if (order.length) {
+          const oa = orderIdx(a.number);
+          const ob = orderIdx(b.number);
+          if (oa !== ob) return oa - ob;
+        }
         const na = parseInt(a.number, 10);
         const nb = parseInt(b.number, 10);
         if (!isNaN(na) && !isNaN(nb)) return na - nb;
@@ -3153,6 +3179,8 @@
         const id = ch.number || ch.title;
         const tr = document.createElement('tr');
         tr.dataset.id = id;
+        tr.draggable = true;
+        tr.classList.add('draggable-row');
 
         const tickCell = document.createElement('td');
         tickCell.className = 'checkbox-cell';
@@ -3273,7 +3301,10 @@
 
       document.getElementById('clear-completed').addEventListener('click', () => {
         const state = loadState();
-        Object.values(state).forEach(s => { s.completed = false; });
+        Object.entries(state).forEach(([k, v]) => {
+          if (k === '_order' || !v || typeof v !== 'object') return;
+          v.completed = false;
+        });
         saveState(state);
         document.querySelectorAll('.complete-checkbox').forEach(cb => {
           cb.checked = false;
@@ -3285,7 +3316,10 @@
 
       document.getElementById('clear-status').addEventListener('click', () => {
         const state = loadState();
-        Object.values(state).forEach(s => { s.status = ''; });
+        Object.entries(state).forEach(([k, v]) => {
+          if (k === '_order' || !v || typeof v !== 'object') return;
+          v.status = '';
+        });
         saveState(state);
         document.querySelectorAll('.status-select').forEach(sel => sel.value = '');
         document.querySelectorAll('#challenges-table tbody tr').forEach(tr => {
@@ -3314,6 +3348,58 @@
 
       bottomBtn.addEventListener('click', () => {
         window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+      });
+
+      let draggedId = null;
+
+      tbody.addEventListener('dragstart', (e) => {
+        const tr = e.target.closest('tr.draggable-row');
+        if (!tr) return;
+        draggedId = tr.dataset.id;
+        tr.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', draggedId);
+        e.dataTransfer.setDragImage(tr, 0, 0);
+      });
+
+      tbody.addEventListener('dragend', (e) => {
+        const tr = e.target.closest('tr.draggable-row');
+        if (tr) tr.classList.remove('dragging');
+        e.target.closest('tbody')?.querySelectorAll('tr.drag-over').forEach(r => r.classList.remove('drag-over'));
+        draggedId = null;
+      });
+
+      tbody.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const tr = e.target.closest('tr.draggable-row');
+        if (!tr || tr.dataset.id === draggedId) return;
+        tbody.querySelectorAll('tr.drag-over').forEach(r => { if (r !== tr) r.classList.remove('drag-over'); });
+        tr.classList.add('drag-over');
+      });
+
+      tbody.addEventListener('dragleave', (e) => {
+        if (!e.target.closest('tbody')) return;
+        const tr = e.target.closest('tr.draggable-row');
+        if (tr && !tbody.contains(e.relatedTarget)) tr.classList.remove('drag-over');
+      });
+
+      tbody.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const targetTr = e.target.closest('tr.draggable-row');
+        if (!targetTr || !draggedId || targetTr.dataset.id === draggedId) return;
+        targetTr.classList.remove('drag-over');
+        const rows = Array.from(tbody.querySelectorAll('tr.draggable-row'));
+        const ids = rows.map(r => r.dataset.id);
+        const fromIdx = ids.indexOf(draggedId);
+        const toIdx = ids.indexOf(targetTr.dataset.id);
+        if (fromIdx === -1 || toIdx === -1) return;
+        ids.splice(fromIdx, 1);
+        ids.splice(toIdx, 0, draggedId);
+        const state = loadState();
+        state._order = ids;
+        saveState(state);
+        renderTable(data, loadState());
       });
     }
 
