@@ -59,6 +59,23 @@
       color: var(--text-muted);
     }
 
+    .author-credit {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .author-credit a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .author-credit a:hover {
+      text-decoration: underline;
+    }
+    .author-sep {
+      margin: 0 6px;
+      opacity: 0.7;
+    }
+
     .controls {
       display: flex;
       flex-wrap: wrap;
@@ -358,8 +375,16 @@
       <div>
         <h1>SUPAXXL Yard Takeover – Tracker</h1>
         <div class="subtitle">299 challenges • progress, notes & colour-coded status – saved on this device.</div>
+        <div class="author-credit">
+          By <a href="https://github.com/IORoot" target="_blank" rel="noopener noreferrer">IORoot</a>
+          <span class="author-sep">·</span>
+          <a href="https://www.instagram.com/andy_n_p" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </div>
       </div>
       <div class="controls">
+        <button id="export-state" type="button">Export state</button>
+        <button id="import-state" type="button">Import state</button>
+        <input type="file" id="import-file-input" accept=".json,application/json" style="display: none;">
         <button id="clear-completed" class="danger">Clear completed flags</button>
         <button id="clear-status" class="danger">Clear row colours</button>
         <button id="clear-all" class="danger">Reset all state</button>
@@ -3330,13 +3355,40 @@
       document.getElementById('clear-all').addEventListener('click', () => {
         if (!confirm('Reset all progress and colours on this device?')) return;
         localStorage.removeItem(STORAGE_KEY);
-        document.querySelectorAll('.complete-checkbox').forEach(cb => {
-          cb.checked = false;
-        });
-        document.querySelectorAll('.status-select').forEach(sel => sel.value = '');
-        document.querySelectorAll('#challenges-table tbody tr').forEach(tr => {
-          tr.classList.remove('completed', 'status-green', 'status-orange', 'status-red');
-        });
+        renderTable(data, loadState());
+      });
+
+      document.getElementById('export-state').addEventListener('click', () => {
+        const state = loadState();
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'yard_takeover_state.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      const importInput = document.getElementById('import-file-input');
+      document.getElementById('import-state').addEventListener('click', () => {
+        importInput.click();
+      });
+      importInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            if (!parsed || typeof parsed !== 'object') throw new Error('Invalid format');
+            saveState(parsed);
+            renderTable(data, loadState());
+            e.target.value = '';
+          } catch (err) {
+            alert('Could not import: invalid or corrupted file.');
+            e.target.value = '';
+          }
+        };
+        reader.readAsText(file);
       });
 
       const topBtn = document.getElementById('scroll-top-btn');
